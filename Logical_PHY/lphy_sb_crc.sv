@@ -19,6 +19,10 @@ module lphy_sb_crc (
   output logic o_lphy_sb_crc_rx_dp_err                  // High if Data Parity mismatch
 );
 
+  // TX Logic
+  logic internal_tx_cp_gen;
+  logic internal_tx_dp_gen;
 
+    
 
 endmodule
