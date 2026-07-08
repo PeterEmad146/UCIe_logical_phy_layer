@@ -115,6 +115,21 @@ module lphy_sb_pkt_enc(
     .o_lphy_sb_crc_rx_dp_err()
   );
 
-  
+  // Output assignments
+  always_ff @(posedge i_lphy_sb_pkt_enc_clk or negedge i_lphy_sb_pkt_enc_rst_n) begin
+    if (!i_lphy_sb_pkt_enc_rst_n) begin
+      o_lphy_sb_pkt_enc_pkt_valid <=1'b0;
+      o_lphy_sb_pkt_enc_pkt_data <= 64'h0;
+      o_lphy_sb_pkt_enc_pkt_has_data <= 1'b0;
+      o_lphy_sb_pkt_enc_pkt_header <= 64'b0;
+    end else begin
+      o_lphy_sb_pkt_enc_pkt_valid <= i_lphy_sb_pkt_enc_req_valid;
+      o_lphy_sb_pkt_enc_pkt_header <= internal_calc_header;
+      o_lphy_sb_pkt_enc_pkt_data <= i_lphy_sb_pkt_enc_payload_in;
+      o_lphy_sb_pkt_enc_pkt_has_data <= internal_has_data;
+    end
+  end  
+
+  assign o_lphy_sb_pkt_enc_req_ready = 1'b1;
 
 endmodule
