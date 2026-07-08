@@ -31,8 +31,20 @@ module lphy_sb_pkt_dec (
   output logic [15:0] o_lphy_sb_pkt_dec_msginfo, 
 
   // Error Flags
-  output logic o_lphy_sb_pkt_dec_parity_err
+  output logic o_lphy_sb_pkt_dec_parity_err 
 );
 
+  // Internal signals for combinatorial decoding
+  logic [31:0] internal_phase0_reg;
+  logic [31:0] internal_phase1_reg;
+
+  logic [4:0] internal_dec_opcode;
+  logic internal_is_reg_req;
+  logic internal_is_reg_cpl;
+  logic internal_is_msg;
+  logic internal_has_data;
+
+  logic internal_rx_cp_err;
+  logic internal_rx_dp_err;
 
 endmodule
