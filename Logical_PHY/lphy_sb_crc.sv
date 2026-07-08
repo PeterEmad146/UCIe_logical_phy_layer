@@ -34,5 +34,15 @@ module lphy_sb_crc (
   // Assemble the final header for transmission
   assign o_lphy_sb_crc_tx_header_out = {internal_tx_dp_gen, internal_tx_cp_gen, i_lphy_sb_crc_tx_header_in[61:0]};
 
+  // RX Logic 
+  logic internal_rx_cp_calc;
+  logic internal_rx_dp_calc;
 
+  // Calculate expected parties from incoming data
+  assign internal_rx_dp_calc = i_lphy_sb_crc_rx_has_data ? ^i_lphy_sb_crc_rx_data_in : 1'b0;
+  assign internal_rx_cp_calc = ^i_lphy_sb_crc_rx_header_in[61:0];
+
+  // Check calculated parity against received parity bits
+  assign o_lphy_sb_crc_rx_dp_err = i_lphy_sb_crc_rx_header_in[63] !== internal_rx_dp_calc;
+  assign o_lphy_sb_crc_rx_cp_err = i_lphy_sb_crc_rx_header_in[62] !== internal_rx_cp_calc;
 endmodule
