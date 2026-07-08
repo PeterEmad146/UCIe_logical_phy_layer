@@ -23,6 +23,16 @@ module lphy_sb_crc (
   logic internal_tx_cp_gen;
   logic internal_tx_dp_gen;
 
-    
+  // Data Parity is the even parity of all bits in the data payload
+  // If there is not data payload, this bit is set to 0b. 
+  assign internal_tx_dp_gen = i_lphy_sb_crc_tx_has_data ? ^i_lphy_sb_crc_tx_data_in : 1'b0;
+
+  // Control Parity is the even parity of all the header bits excluding DP (and CP itself)
+  // Bits [61:0] represent the header excluding CP (Bit 62) and DP (Bit 63).
+  assign internal_tx_cp_gen = ^i_lphy_sb_crc_tx_header_in[61:0];
+
+  // Assemble the final header for transmission
+  assign o_lphy_sb_crc_tx_header_out = {internal_tx_dp_gen, internal_tx_cp_gen, i_lphy_sb_crc_tx_header_in[61:0]};
+
 
 endmodule
