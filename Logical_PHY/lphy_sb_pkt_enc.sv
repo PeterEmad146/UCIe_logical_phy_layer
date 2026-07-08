@@ -102,6 +102,19 @@ module lphy_sb_pkt_enc(
     internal_raw_header = {internal_phase1_reg, internal_phase0_reg};
   end
 
+  // Instantiate Phase 1 Parity Calculator
+  lphy_sb_crc parity_calc (
+    .i_lphy_sb_crc_tx_header_in(internal_raw_header), 
+    .i_lphy_sb_crc_tx_data_in(i_lphy_sb_pkt_enc_payload_in),
+    .i_lphy_sb_crc_tx_has_data(internal_has_data),
+    .o_lphy_sb_crc_tx_header_out(internal_calc_header),
+    .i_lphy_sb_crc_rx_header_in(64'h0),
+    .i_lphy_sb_crc_rx_data_in(64'h0), 
+    .i_lphy_sb_crc_rx_has_data(1'b0), 
+    .o_lphy_sb_crc_rx_cp_err(), 
+    .o_lphy_sb_crc_rx_dp_err()
+  );
 
+  
 
 endmodule
