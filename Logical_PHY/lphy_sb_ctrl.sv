@@ -99,6 +99,32 @@ module lphy_sb_ctrl (
     .i_lphy_sb_flow_ctrl_remote_crd_ret(o_lphy_sb_ctrl_rx_req_valid & o_lphy_sb_ctrl_rx_cr)
   );
 
-  
+  // 2. Packet Encoder
+  assign internal_fire_encoder = i_lphy_sb_ctrl_tx_req_valid & internal_tx_allowed & internal_seq_tx_ready;
+  assign o_lphy_sb_ctrl_tx_req_ready internal_tx_allowed & internal_seq_tx_ready;
+
+  lphy_sb_pkt_enc enc_inst (
+    .i_lphy_sb_pkt_enc_clk(i_lphy_sb_ctrl_clk),
+    .i_lphy_sb_pkt_enc_rst_n(i_lphy_sb_ctrl_rst_n), 
+    .i_lphy_sb_pkt_enc_req_valid(internal_fire_encoder), 
+    .o_lphy_sb_pkt_enc_req_ready(), 
+    .i_lphy_sb_pkt_enc_opcode(i_lphy_sb_ctrl_tx_opcode), 
+    .i_lphy_sb_pkt_enc_srcid(i_lphy_sb_ctrl_tx_srcid), 
+    .i_lphy_sb_pkt_enc_dstid(i_lphy_sb_ctrl_tx_dstid), 
+    .i_lphy_sb_pkt_enc_ep(i_lphy_sb_ctrl_tx_ep), 
+    .i_lphy_sb_pkt_enc_cr(i_lphy_sb_ctrl_tx_cr), 
+    .i_lphy_sb_pkt_enc_payload_in(i_lphy_sb_ctrl_tx_payload), 
+    .i_lphy_sb_pkt_enc_tag(i_lphy_sb_ctrl_tx_tag), 
+    .i_lphy_sb_pkt_enc_be(i_lphy_sb_ctrl_tx_be), 
+    .i_lphy_sb_pkt_enc_addr(i_lphy_sb_ctrl_tx_addr), 
+    .i_lphy_sb_pkt_enc_cp_status(i_lphy_sb_ctrl_tx_cp_status), 
+    .i_lphy_sb_pkt_enc_msgcode(i_lphy_sb_ctrl_tx_msgcode), 
+    .i_lphy_sb_pkt_enc_msgsubcode(i_lphy_sb_ctrl_tx_msgsubcode), 
+    .i_lphy_sb_pkt_enc_msginfo(i_lphy_sb_ctrl_tx_msginfo), 
+    .o_lphy_sb_pkt_enc_pkt_valid(internal_enc_pkt_valid), 
+    .o_lphy_sb_pkt_enc_pkt_header(internal_enc_pkt_header), 
+    .o_lphy_sb_pkt_enc_pkt_data(internal_enc_pkt_data), 
+    .o_lphy_sb_pkt_enc_pkt_has_data(internal_has_data)
+  );
 
 endmodule
