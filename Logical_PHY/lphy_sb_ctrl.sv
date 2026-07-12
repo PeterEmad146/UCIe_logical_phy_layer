@@ -124,7 +124,7 @@ module lphy_sb_ctrl (
     .o_lphy_sb_pkt_enc_pkt_valid(internal_enc_pkt_valid), 
     .o_lphy_sb_pkt_enc_pkt_header(internal_enc_pkt_header), 
     .o_lphy_sb_pkt_enc_pkt_data(internal_enc_pkt_data), 
-    .o_lphy_sb_pkt_enc_pkt_has_data(internal_has_data)
+    .o_lphy_sb_pkt_enc_pkt_has_data(internal_enc_pkt_has_data)
   );
 
   // 3. TX Word Sequencer
@@ -241,7 +241,7 @@ module lphy_sb_ctrl (
           if (i_lphy_sb_ctrl_afe_rx_valid) begin
             // Payload received, push full packet to decoder
             internal_dec_pkt_header <= internal_hold_rx_header;
-            internal_dec_pkt_valid <= i_lphy_sb_ctrl_afe_rx_data;
+            internal_dec_pkt_data <= i_lphy_sb_ctrl_afe_rx_data;
             internal_dec_pkt_valid <= 1'b1;
             rx_state <= ST_RX_HDR;
           end
