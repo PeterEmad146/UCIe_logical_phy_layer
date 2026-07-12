@@ -47,7 +47,7 @@ module lphy_sb_flow_ctrl #(
     end
   end
 
-  // Authorizatoin logic
+  // Authorization logic
   always_comb begin
     if (i_lphy_sb_flow_ctrl_is_reg_cpl) begin
       // Completions must always sink and do not require credits
