@@ -81,6 +81,20 @@ module lphy_sb_pkt_dec (
                         (internal_dec_opcode == 5'b11011);
   end
 
+  // Instantiate Parity Checker
+  lphy_sb_crc parity_checher (
+    .i_lphy_sb_crc_tx_header_in(64'h0),
+    .i_lphy_sb_crc_tx_data_in(64'h0),
+    .i_lphy_sb_crc_tx_has_data(1'b0),
+    .o_lphy_sb_crc_tx_header_out(),
+
+    .i_lphy_sb_crc_rx_header_in(i_lphy_sb_pkt_dec_pkt_header), 
+    .i_lphy_sb_crc_rx_data_in(i_lphy_sb_pkt_dec_pkt_data), 
+    .i_lphy_sb_crc_rx_has_data(internal_has_data), 
+    .o_lphy_sb_crc_rx_cp_err(internal_rx_cp_err), 
+    .o_lphy_sb_crc_rx_dp_err(internal_rx_dp_err)
+  );
+
   
 
 endmodule
