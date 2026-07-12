@@ -85,6 +85,20 @@ module lphy_sb_ctrl (
                       (i_lphy_sb_ctrl_tx_opcode == 5'b11011);
   end
 
+  // 1. Flow Control
+  lphy_sb_flow_ctrl #(.LOCAL_CREDITS_INIT(32)) fc_inst (
+    .i_lphy_sb_flow_ctrl_clk(i_lphy_sb_ctrl_clk), 
+    .i_lphy_sb_flow_ctrl_rst_n(i_lphy_sb_ctrl_rst_n), 
+    .i_lphy_sb_flow_ctrl_rdi_in_reset(i_lphy_sb_ctrl_rdi_in_reset), 
+    .i_lphy_sb_flow_ctrl_req_valid(i_lphy_sb_ctrl_tx_req_valid), 
+    .i_lphy_sb_flow_ctrl_is_reg_req(internal_is_reg_req), 
+    .i_lphy_sb_flow_ctrl_is_reg_cpl(internal_is_reg_cpl), 
+    .i_lphy_sb_flow_ctrl_is_msg(internal_is_msg), 
+    .o_lphy_sb_flow_ctrl_tx_allowed(internal_tx_allowed), 
+    .i_lphy_sb_flow_ctrl_local_crd_ret(i_lphy_sb_ctrl_tx_local_crd_ret), 
+    .i_lphy_sb_flow_ctrl_remote_crd_ret(o_lphy_sb_ctrl_rx_req_valid & o_lphy_sb_ctrl_rx_cr)
+  );
+
   
 
 endmodule
