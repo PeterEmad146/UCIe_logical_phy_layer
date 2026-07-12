@@ -67,6 +67,24 @@ module lphy_sb_ctrl (
   // Decode Opcode for Flow Control
   logic internal_is_reg_req, internal_is_reg_cpl, internal_is_msg;
 
+  always_comb begin
+    internal_is_reg_req = (i_lphy_sb_ctrl_tx_opcode == 5'b00000) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b00001) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b00100) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b00101) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b01000) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b01001) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b01100) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b01101);
+    
+    internal_is_reg_cpl = (i_lphy_sb_ctrl_tx_opcode == 5'b10000) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b10001) ||
+                          (i_lphy_sb_ctrl_tx_opcode == 5'b11001);
+    
+    internal_is_msg = (i_lphy_sb_ctrl_tx_opcode == 5'b10010) ||
+                      (i_lphy_sb_ctrl_tx_opcode == 5'b11011);
+  end
+
   
 
 endmodule
