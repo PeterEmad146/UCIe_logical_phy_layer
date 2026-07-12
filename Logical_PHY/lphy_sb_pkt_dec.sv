@@ -95,6 +95,85 @@ module lphy_sb_pkt_dec (
     .o_lphy_sb_crc_rx_dp_err(internal_rx_dp_err)
   );
 
+  // Synchronous output assignment
+  always_ff @(posedge i_lphy_sb_pkt_dec_clk or negedge i_lphy_sb_pkt_dec_rst_n) begin
   
+    if(!i_lphy_sb_pkt_dec_rst_n) begin
+
+      o_lphy_sb_pkt_dec_req_valid <= 1'b0;
+      o_lphy_sb_pkt_dec_opcode <= 5'h0;
+      o_lphy_sb_pkt_dec_srcid <= 3'h0;
+      o_lphy_sb_pkt_dec_dstid <= 3'h0;
+      o_lphy_sb_pkt_dec_ep <= 1'b0;
+      o_lphy_sb_pkt_dec_cr <= 1'b0;
+      o_lphy_sb_pkt_dec_payload_out <= 64'h0;
+      o_lphy_sb_pkt_dec_tag <= 5'h0;
+      o_lphy_sb_pkt_dec_be <= 8'h0;
+      o_lphy_sb_pkt_dec_addr <= 24'h0;
+      o_lphy_sb_pkt_dec_cp_status <= 3'h0;
+      o_lphy_sb_pkt_dec_msgcode <= 8'h0;
+      o_lphy_sb_pkt_dec_msgsubcode <= 8'h0;
+      o_lphy_sb_pkt_dec_parity_err <= 1'b0;
+
+    end else if (i_lphy_sb_pkt_dec_pkt_valid) begin
+      
+      o_lphy_sb_pkt_dec_req_valid <= 1'b1;
+      o_lphy_sb_pkt_dec_opcode <= internal_dec_opcode;
+      o_lphy_sb_pkt_dec_payload_out <= i_lphy_sb_pkt_dec_pkt_data;
+      o_lphy_sb_pkt_dec_parity_err <= internal_rx_cp_err | internal_rx_dp_err;
+
+      // Common decode for srcid
+      srcid <= internal_phase0_reg[31:29];
+
+      if(internal_is_msg) begin
+        // Message Format
+        o_lphy_sb_pkt_dec_dstid <= internal_phase1_reg[26:24];
+        o_lphy_sb_pkt_dec_msgcode <= internal_phase0_reg[21:14];
+        o_lphy_sb_pkt_dec_msginfo <= internal_phase1_reg[23:8];
+        o_lphy_sb_pkt_dec_msgsubcode <= internal_phase1_reg[7:0];
+
+        // Zero Out unused fields
+        o_lphy_sb_pkt_dec_ep <= 0;
+        o_lphy_sb_pkt_dec_cr <= 0;
+        o_lphy_sb_pkt_dec_tag <= 0;
+        o_lphy_sb_pkt_dec_be <= 0;
+        o_lphy_sb_pkt_dec_addr <= 0;
+        o_lphy_sb_pkt_dec_cp_status <= 0;
+
+      end else if (internal_is_reg_cpl) begin
+        // Register Access Completions
+        o_lphy_sb_pkt_dec_dstid <= phase1[26:24];
+        o_lphy_sb_pkt_dec_cr <= phase1[29];
+        o_lphy_sb_pkt_dec_tag <= internal_phase0_reg[26:22];
+        o_lphy_sb_pkt_dec_be <= internal_phase0_reg[21:14];
+        o_lphy_sb_pkt_dec_ep <= internal_phase0_reg[5];
+        o_lphy_sb_pkt_dec_cp_status <= internal_phase1_reg[2:0];
+
+        // Zero Out unused fields
+        o_lphy_sb_pkt_dec_addr <= 0;
+        o_lphy_sb_pkt_dec_msgcode <= 0;
+        o_lphy_sb_pkt_dec_msginfo <= 0;
+        o_lphy_sb_pkt_dec_msgsubcode <= 0;
+      end else begin
+        // Register Access Requests
+        o_lphy_sb_pkt_dec_dstid <= internal_phase1_reg[26:24];
+        o_lphy_sb_pkt_dec_cr <= internal_phase1_reg[29];
+        o_lphy_sb_pkt_dec_tag <= internal_phase0_reg[26:22];
+        o_lphy_sb_pkt_dec_be <= internal_phase0_reg[21:14];
+        o_lphy_sb_pkt_dec_ep <= internal_phase0_reg[5];
+        o_lphy_sb_pkt_dec_addr <= internal_phase1_reg[23:0];
+
+        // Zero out unused fields
+        o_lphy_sb_pkt_dec_cp_status <= 0;
+        o_lphy_sb_pkt_dec_msgcode <= 0;
+        o_lphy_sb_pkt_dec_msginfo <= 0;
+        o_lphy_sb_pkt_dec_msgsubcode <= 0;
+      end
+    end else begin
+      o_lphy_sb_pkt_dec_req_valid <= 1'b0;
+      o_lphy_sb_pkt_dec_parity_err <= 1'b0;
+    end  
+
+  end
 
 endmodule
