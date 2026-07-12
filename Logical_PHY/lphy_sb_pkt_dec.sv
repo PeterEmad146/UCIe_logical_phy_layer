@@ -47,4 +47,40 @@ module lphy_sb_pkt_dec (
   logic internal_rx_cp_err;
   logic internal_rx_dp_err;
 
+  // Split Header into phases
+  assign internal_phase1_reg = i_lphy_sb_pkt_dec_pkt_header[63:32];
+  assign internal_phase0_reg = i_lphy_sb_pkt_dec_pkt_header[31:0];
+
+  // Opcode is always at the same location of phase 0
+  assign internal_dec_opcode = internal_phase0_reg[4:0];
+
+  // Decode Opcode Groups
+  always_comb begin
+    internal_is_reg_req = (internal_dec_opcode == 5'b00000) ||
+                          (internal_dec_opcode == 5'b00001) ||
+                          (internal_dec_opcode == 5'b00100) ||
+                          (internal_dec_opcode == 5'b00101) ||
+                          (internal_dec_opcode == 5'b01000) ||
+                          (internal_dec_opcode == 5'b01001) ||
+                          (internal_dec_opcode == 5'b01100) ||
+                          (internal_dec_opcode == 5'b01101);
+
+    internal_is_reg_cpl = (internal_dec_opcode == 5'b10000) ||
+                          (internal_dec_opcode == 5'b10001) ||
+                          (internal_dec_opcode == 5'b11001);
+    
+    internal_is_msg = (internal_dec_opcode == 5'b10010) ||
+                      (internal_dec_opcode == 5'b11011);
+    
+    internal_has_data = (internal_dec_opcode == 5'b00001) ||
+                        (internal_dec_opcode == 5'b00101) ||
+                        (internal_dec_opcode == 5'b01001) ||
+                        (internal_dec_opcode == 5'b01101) ||
+                        (internal_dec_opcode == 5'b10001) ||
+                        (internal_dec_opcode == 5'b11001) ||
+                        (internal_dec_opcode == 5'b11011);
+  end
+
+  
+
 endmodule
