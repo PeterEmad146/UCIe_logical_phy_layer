@@ -55,7 +55,7 @@ module lphy_sb_pkt_enc(
                (i_lphy_sb_pkt_enc_opcode == 5'b01101) ||   // 64b Cfg Write
                (i_lphy_sb_pkt_enc_opcode == 5'b10001) ||   // Cpl with 32b Data
                (i_lphy_sb_pkt_enc_opcode == 5'b11001) ||   // Cpl with 64b Data
-               (i_lphy_sb_pkt_enc_opcode == 5'b11011) ||   // Message with 64b Data
+               (i_lphy_sb_pkt_enc_opcode == 5'b11011);     // Message with 64b Data
 
     internal_is_reg_req = (i_lphy_sb_pkt_enc_opcode == 5'b00000) ||
                  (i_lphy_sb_pkt_enc_opcode == 5'b00001) ||
@@ -66,9 +66,9 @@ module lphy_sb_pkt_enc(
                  (i_lphy_sb_pkt_enc_opcode == 5'b01100) ||
                  (i_lphy_sb_pkt_enc_opcode == 5'b01101);
     
-    internal_is_reg_cpl = (i_lphy_sb_pkt_enc_opcode == 5'b10000);
-                 (i_lphy_sb_pkt_enc_opcode == 5'b10001);
-                 (i_lphy_sb_pkt_enc_opcode == 5'b11001);
+    internal_is_reg_cpl = (i_lphy_sb_pkt_enc_opcode == 5'b10000) ||
+                          (i_lphy_sb_pkt_enc_opcode == 5'b10001) ||
+                          (i_lphy_sb_pkt_enc_opcode == 5'b11001);
   end
 
   // Assemble the 64-bit Header (Phase 0 and Phase 1)
@@ -102,6 +102,9 @@ module lphy_sb_pkt_enc(
     internal_raw_header = {internal_phase1_reg, internal_phase0_reg};
   end
 
+  logic unused_rx_cp_err;
+  logic unused_rx_dp_err;
+
   // Instantiate Phase 1 Parity Calculator
   lphy_sb_crc parity_calc (
     .i_lphy_sb_crc_tx_header_in(internal_raw_header), 
@@ -111,8 +114,8 @@ module lphy_sb_pkt_enc(
     .i_lphy_sb_crc_rx_header_in(64'h0),
     .i_lphy_sb_crc_rx_data_in(64'h0), 
     .i_lphy_sb_crc_rx_has_data(1'b0), 
-    .o_lphy_sb_crc_rx_cp_err(), 
-    .o_lphy_sb_crc_rx_dp_err()
+    .o_lphy_sb_crc_rx_cp_err(unused_rx_cp_err), 
+    .o_lphy_sb_crc_rx_dp_err(unused_rx_dp_err)
   );
 
   // Output assignments

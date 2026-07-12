@@ -81,12 +81,14 @@ module lphy_sb_pkt_dec (
                         (internal_dec_opcode == 5'b11011);
   end
 
+  logic unused_tx_header_out;
+
   // Instantiate Parity Checker
   lphy_sb_crc parity_checher (
     .i_lphy_sb_crc_tx_header_in(64'h0),
     .i_lphy_sb_crc_tx_data_in(64'h0),
     .i_lphy_sb_crc_tx_has_data(1'b0),
-    .o_lphy_sb_crc_tx_header_out(),
+    .o_lphy_sb_crc_tx_header_out(unused_tx_header_out),
 
     .i_lphy_sb_crc_rx_header_in(i_lphy_sb_pkt_dec_pkt_header), 
     .i_lphy_sb_crc_rx_data_in(i_lphy_sb_pkt_dec_pkt_data), 
@@ -123,7 +125,7 @@ module lphy_sb_pkt_dec (
       o_lphy_sb_pkt_dec_parity_err <= internal_rx_cp_err | internal_rx_dp_err;
 
       // Common decode for srcid
-      srcid <= internal_phase0_reg[31:29];
+      o_lphy_sb_pkt_dec_srcid <= internal_phase0_reg[31:29];
 
       if(internal_is_msg) begin
         // Message Format
@@ -142,8 +144,8 @@ module lphy_sb_pkt_dec (
 
       end else if (internal_is_reg_cpl) begin
         // Register Access Completions
-        o_lphy_sb_pkt_dec_dstid <= phase1[26:24];
-        o_lphy_sb_pkt_dec_cr <= phase1[29];
+        o_lphy_sb_pkt_dec_dstid <= internal_phase1_reg[26:24];
+        o_lphy_sb_pkt_dec_cr <= internal_phase1_reg[29];
         o_lphy_sb_pkt_dec_tag <= internal_phase0_reg[26:22];
         o_lphy_sb_pkt_dec_be <= internal_phase0_reg[21:14];
         o_lphy_sb_pkt_dec_ep <= internal_phase0_reg[5];
