@@ -250,4 +250,28 @@ module lphy_sb_ctrl (
     end
   end
 
+  // 5. Packet Decoder
+  lphy_sb_pkt_dec lphy_sb_pkt_dec (
+    .i_lphy_sb_pkt_dec_clk        (i_lphy_sb_ctrl_clk),
+    .i_lphy_sb_pkt_dec_rst_n      (i_lphy_sb_ctrl_rst_n),
+    .i_lphy_sb_pkt_dec_pkt_valid  (internal_dec_pkt_valid),
+    .i_lphy_sb_pkt_dec_pkt_header (internal_dec_pkt_header),
+    .i_lphy_sb_pkt_dec_pkt_data   (internal_dec_pkt_data),
+    .o_lphy_sb_pkt_dec_req_valid  (o_lphy_sb_ctrl_rx_req_valid),
+    .o_lphy_sb_pkt_dec_opcode     (o_lphy_sb_ctrl_rx_opcode),
+    .o_lphy_sb_pkt_dec_srcid      (o_lphy_sb_ctrl_rx_srcid),
+    .o_lphy_sb_pkt_dec_dstid      (o_lphy_sb_ctrl_rx_dstid),
+    .o_lphy_sb_pkt_dec_ep         (o_lphy_sb_ctrl_rx_ep),
+    .o_lphy_sb_pkt_dec_cr         (o_lphy_sb_ctrl_rx_cr),
+    .o_lphy_sb_pkt_dec_payload_out(o_lphy_sb_ctrl_rx_payload),
+    .o_lphy_sb_pkt_dec_tag        (o_lphy_sb_ctrl_rx_tag),
+    .o_lphy_sb_pkt_dec_be         (o_lphy_sb_ctrl_rx_be),
+    .o_lphy_sb_pkt_dec_addr       (o_lphy_sb_ctrl_rx_addr),
+    .o_lphy_sb_pkt_dec_cp_status  (o_lphy_sb_ctrl_rx_cp_status),
+    .o_lphy_sb_pkt_dec_msgcode    (o_lphy_sb_ctrl_rx_msgcode),
+    .o_lphy_sb_pkt_dec_msgsubcode (o_lphy_sb_ctrl_rx_msgsubcode),
+    .o_lphy_sb_pkt_dec_msginfo    (o_lphy_sb_ctrl_rx_msginfo),
+    .o_lphy_sb_pkt_dec_parity_err (o_lphy_sb_ctrl_rx_parity_err)
+  );
+
 endmodule
