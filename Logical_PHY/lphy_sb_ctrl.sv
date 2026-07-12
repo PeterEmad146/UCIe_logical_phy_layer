@@ -101,7 +101,7 @@ module lphy_sb_ctrl (
 
   // 2. Packet Encoder
   assign internal_fire_encoder = i_lphy_sb_ctrl_tx_req_valid & internal_tx_allowed & internal_seq_tx_ready;
-  assign o_lphy_sb_ctrl_tx_req_ready internal_tx_allowed & internal_seq_tx_ready;
+  assign o_lphy_sb_ctrl_tx_req_ready = internal_tx_allowed & internal_seq_tx_ready;
 
   lphy_sb_pkt_enc enc_inst (
     .i_lphy_sb_pkt_enc_clk(i_lphy_sb_ctrl_clk),
@@ -187,12 +187,67 @@ module lphy_sb_ctrl (
             // Push Payload to AFE
             o_lphy_sb_ctrl_afe_tx_valid <= 1'b1;
             o_lphy_sb_ctrl_afe_tx_data <= internal_hold_tx_data;
-            internal_seq_tx_read <= 1'b1;                           // Ready for next packet
+            internal_seq_tx_ready <= 1'b1;                           // Ready for next packet
           end
         end
       endcase
     end
   end
 
+  // 4. RX Word Sequencer
+  assign o_lphy_sb_ctrl_afe_rx_en = 1'b1;   // Enable AFE receivers
+
+  typedef enum logic {ST_RX_HDR, ST_RX_DATA} rx_st_t;
+
+  rx_st_t rx_state;
+
+  logic [63:0] internal_hold_rx_header;
+  logic internal_rx_expects_data;
+  logic [4:0] internal_raw_opcode;
+
+  always_ff @(posedge i_lphy_sb_ctrl_clk or negedge i_lphy_sb_ctrl_rst_n) begin
+    if (!i_lphy_sb_ctrl_rst_n) begin
+      rx_state <= ST_RX_HDR;
+      internal_dec_pkt_valid <= 1'b0;
+      internal_dec_pkt_header <= 64'h0;
+      internal_dec_pkt_data <= 64'h0;
+      internal_hold_rx_header <= 64'h0;
+      internal_rx_expects_data <= 1'b0;
+    end else begin
+      internal_dec_pkt_valid <= 1'b0;   // Default clear pulse
+
+      case(rx_state)
+        ST_RX_HDR: begin
+          if(i_lphy_sb_ctrl_afe_rx_valid) begin
+            internal_hold_rx_header <= i_lphy_sb_ctrl_afe_rx_data;
+
+            // Peek into the raw header to determine if payload is expected
+            internal_raw_opcode = i_lphy_sb_ctrl_afe_rx_data[4:0];
+            if (internal_raw_opcode == 5'b00001 || internal_raw_opcode == 5'b00101 ||
+                internal_raw_opcode == 5'b01001 || internal_raw_opcode == 5'b01101 ||
+                internal_raw_opcode == 5'b10001 || internal_raw_opcode == 5'b11001 ||
+                internal_raw_opcode == 5'b11011) begin
+              rx_state <= ST_RX_DATA;   // Move to data wait state
+            end else begin
+              // Header-only packet is complete
+              internal_dec_pkt_header <= i_lphy_sb_ctrl_afe_rx_data;
+              internal_dec_pkt_data <= 64'h0;
+              internal_dec_pkt_valid <= 1'b1;
+            end
+          end 
+        end
+
+        ST_RX_DATA: begin
+          if (i_lphy_sb_ctrl_afe_rx_valid) begin
+            // Payload received, push full packet to decoder
+            internal_dec_pkt_header <= internal_hold_rx_header;
+            internal_dec_pkt_valid <= i_lphy_sb_ctrl_afe_rx_data;
+            internal_dec_pkt_valid <= 1'b1;
+            rx_state <= ST_RX_HDR;
+          end
+        end
+      endcase
+    end
+  end
 
 endmodule
