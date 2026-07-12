@@ -50,5 +50,23 @@ module lphy_sb_ctrl (
   output logic o_lphy_sb_ctrl_afe_rx_en             // Enables Sideband RX in the AFE
 );
 
+  // Internal Signals
+  logic internal_tx_allowed;
+  logic internal_seq_tx_ready;
+  logic internal_fire_encoder;
+
+  logic internal_enc_pkt_valid; 
+  logic [63:0] internal_enc_pkt_header;
+  logic [63:0] internal_enc_pkt_data; 
+  logic internal_enc_pkt_has_data;
+
+  logic internal_dec_pkt_valid;
+  logic [63:0] internal_dec_pkt_header;
+  logic [63:0] internal_dec_pkt_data;
+
+  // Decode Opcode for Flow Control
+  logic internal_is_reg_req, internal_is_reg_cpl, internal_is_msg;
+
+  
 
 endmodule
