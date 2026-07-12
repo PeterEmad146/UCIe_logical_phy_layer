@@ -12,7 +12,7 @@ module lphy_sb_crc (
   // RX Sideband Parity Checking
   input logic [63:0] i_lphy_sb_crc_rx_header_in, 
   input logic [63:0] i_lphy_sb_crc_rx_data_in, 
-  input logic [63:0] i_lphy_sb_crc_rx_has_data,
+  input logic i_lphy_sb_crc_rx_has_data,
 
   // Error flags (Should be routed to fatal UIE escalation logic)
   output logic o_lphy_sb_crc_rx_cp_err,                 // High if Control Parity mismatch
