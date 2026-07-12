@@ -64,7 +64,7 @@ module lphy_byte_lane_map (
           for (int i = 0; i < 32; i++) o_lphy_byte_lane_map_lane_data[i] <= internal_buffer[(i+32)*8 +: 8];
           internal_busy <= 1'b0;
         end else begin                                        // x16 Continue
-          for (int i = 0; i < 16; i++) o_lphy_byte_lane_map_lane_data[i] <= internal_buffer[(i+internal_chunk_cnt*16)*8 +: 8];
+          for (int i = 0; i < 16; i++) o_lphy_byte_lane_map_lane_data[i] <= internal_buffer[(i + internal_chunk_cnt*16)*8 +: 8];
           if (internal_chunk_cnt == 3) internal_busy <= 1'b0;
           else internal_chunk_cnt <= internal_chunk_cnt + 1;
         end
