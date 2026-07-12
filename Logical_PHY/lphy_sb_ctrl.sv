@@ -127,4 +127,72 @@ module lphy_sb_ctrl (
     .o_lphy_sb_pkt_enc_pkt_has_data(internal_has_data)
   );
 
+  // 3. TX Word Sequencer
+  typedef enum logic {ST_TX_IDLE, ST_TX_DATA} tx_st_t;
+  tx_st_t tx_state, tx_next_state;
+  
+  logic [63:0] internal_hold_tx_data;
+
+  // State Register
+  always_ff @(posedge i_lphy_sb_ctrl_clk or negedge i_lphy_sb_ctrl_rst_n) begin
+    if (!i_lphy_sb_ctrl_rst_n) tx_state <= ST_TX_IDLE;
+    else tx_state <= tx_next_state;
+  end
+  
+  // Next State Logic
+  always_comb begin
+    tx_next_state = tx_state;
+    case (tx_state)
+      ST_TX_IDLE: begin
+        // If a packet arrives and it has data, move to DATA state
+        if (internal_enc_pkt_valid && internal_seq_tx_ready && internal_enc_pkt_has_data)
+          tx_next_state = ST_TX_DATA;
+      end
+
+      ST_TX_DATA : begin
+        // Once the AFE accepts the data payload, return to IDLE
+        if (i_lphy_sb_ctrl_afe_tx_ready)
+          tx_next_state = ST_TX_IDLE;
+      end
+    endcase
+  end
+
+  // Registered Outputs (Glitch-Free to AFE)
+  always_ff @(posedge i_lphy_sb_ctrl_clk or negedge i_lphy_sb_ctrl_rst_n) begin
+    if(!i_lphy_sb_ctrl_rst_n) begin
+      o_lphy_sb_ctrl_afe_tx_valid <= 1'b0;
+      o_lphy_sb_ctrl_afe_tx_data <= 64'h0;
+      internal_seq_tx_ready <= 1'b1;
+      internal_hold_tx_data <= 64'h0;
+    end else begin
+      case (tx_state)
+        ST_TX_IDLE: begin
+          if (internal_enc_pkt_valid && internal_seq_tx_ready) begin
+            // Push Header to AFE
+            o_lphy_sb_ctrl_afe_tx_valid <= 1'b1;
+            o_lphy_sb_ctrl_afe_tx_data <= internal_enc_pkt_header;
+
+            if (internal_enc_pkt_has_data) begin
+              internal_hold_tx_data <= internal_enc_pkt_data;
+              internal_seq_tx_ready <= 1'b0;
+            end
+          end else if (i_lphy_sb_ctrl_afe_tx_ready) begin
+            // Clear valid if no new packet is pending
+            o_lphy_sb_ctrl_afe_tx_valid <= 1'b0;
+          end
+        end
+        
+        ST_TX_DATA: begin
+          if (i_lphy_sb_ctrl_afe_tx_ready) begin
+            // Push Payload to AFE
+            o_lphy_sb_ctrl_afe_tx_valid <= 1'b1;
+            o_lphy_sb_ctrl_afe_tx_data <= internal_hold_tx_data;
+            internal_seq_tx_read <= 1'b1;                           // Ready for next packet
+          end
+        end
+      endcase
+    end
+  end
+
+
 endmodule
