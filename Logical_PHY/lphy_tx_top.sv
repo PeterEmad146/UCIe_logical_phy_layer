@@ -141,6 +141,20 @@ module lphy_tx_top #(
     end
   endgenerate
 
+  // 5. TX Repair Multiplexer
+  logic [63:0] internal_tx_lane_failed_map;
+  always_comb begin
+    internal_tx_lane_failed_map = i_lphy_tx_top_repair_en ? i_lphy_tx_top_ext_lane_failed_map : 64'h0;
+  end
+
+  lphy_repair_tx tx_repair_inst (
+    .i_lphy_repair_tx_tx_logical_data  (internal_scrambled_lane_data),
+    .i_lphy_repair_tx_lane_failed      (internal_tx_lane_failed_map),
+    .o_lphy_repair_tx_tx_physical_data (internal_repaired_lane_data),
+    .o_lphy_repair_tx_tx_redundant_data(internal_repaired_txrd_data)
+  );
+
+  
   
 
 endmodule
