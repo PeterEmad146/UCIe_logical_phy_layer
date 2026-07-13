@@ -125,6 +125,22 @@ module lphy_tx_top #(
     end
   end
 
+  // 4. Scrambler Array
+  genvar i;
+  generate;
+    for (i = 0; i < NUM_LANES; i++) begin: gen_scramblers
+      lphy_scrambler scrambler_inst (
+        .i_lphy_scrambler_clk(i_lphy_tx_top_clk), 
+        .i_lphy_scrambler_rst_n(i_lphy_tx_top_rst_n), 
+        .i_lphy_scrambler_enable(i_lphy_tx_top_scrambler_en & internal_mapped_lane_valid_d1),
+        .i_lphy_scrambler_load_seed(i_lphy_tx_top_load_seed), 
+        .i_lphy_scrambler_seed_in(i_lphy_tx_top_lane_seeds[i]),
+        .i_lphy_scrambler_data_in(internal_pre_scramble_data[i]),
+        .i_lphy_scramber_data_out(internal_scrambled_lane_data[i])
+      );
+    end
+  endgenerate
 
+  
 
 endmodule
