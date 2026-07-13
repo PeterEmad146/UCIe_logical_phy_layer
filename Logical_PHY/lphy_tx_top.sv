@@ -51,6 +51,35 @@ module lphy_tx_top #(
   logic [7:0] internal_repaired_lane_data [63:0];
   logic [7:0] internal_repaired_txrd_data [3:0];
 
+  // 1. Byte-to-lane mapper
+  lphy_byte_lane_map byte_mapper_inst (
+    .i_lphy_byte_lane_map_clk(i_lphy_tx_top_clk), 
+    .i_lphy_byte_lane_map_rst_n(i_lphy_tx_top_rst_n), 
+    .i_lphy_byte_lane_map_link_width(i_lphy_tx_top_link_width),
+    .i_lphy_byte_lane_map_lp_valid(i_lphy_tx_top_lp_valid), 
+    .i_lphy_byte_lane_map_lp_irdy(i_lphy_tx_top_lp_irdy), 
+    .o_lphy_byte_lane_map_pl_trdy(o_lphy_tx_top_pl_trdy), 
+    .i_lphy_byte_lane_map_lp_data(i_lphy_tx_top_lp_data), 
+    .i_lphy_byte_lane_map_lp_valid(internal_mapped_lane_valid),
+    .i_lphy_byte_lane_map_lp_data(internal_mapped_lane_data),
+  );
+
+  // Pipeline Alignment Stage
+  // The valid framer has 1 cycle of sequential latency. We must delay the
+  // datapath and scrambler enable by 1 cycle to maintain exact alignment.
+  logic [7:0] internal_mapped_lane_data_d1 [63:0];
+  logic internal_mapped_lane_valid_d1;
+
+  always_ff @(posedge i_lphy_tx_top_clk or negedge i_lphy_tx_top_rst_n) begin
+    if (!i_lphy_tx_top_rst_n) begin
+      internal_mapped_lane_valid_d1 <= 1'b0;
+      for (int i = 0; i < 64; i++) internal_mapped_lane_data_d1[i] <= 8'h00;
+    end else begin
+      internal_mapped_lane_valid_d1 <= internal_mapped_lane_valid;
+      for (int i = 0; i < 64; i++) internal_mapped_lane_data_d1[i] <= internal_mapped_lane_data[i];
+    end
+  end
+
   
 
 endmodule
