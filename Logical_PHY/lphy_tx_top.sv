@@ -60,8 +60,8 @@ module lphy_tx_top #(
     .i_lphy_byte_lane_map_lp_irdy(i_lphy_tx_top_lp_irdy), 
     .o_lphy_byte_lane_map_pl_trdy(o_lphy_tx_top_pl_trdy), 
     .i_lphy_byte_lane_map_lp_data(i_lphy_tx_top_lp_data), 
-    .i_lphy_byte_lane_map_lp_valid(internal_mapped_lane_valid),
-    .i_lphy_byte_lane_map_lp_data(internal_mapped_lane_data),
+    .o_lphy_byte_lane_map_lane_valid(internal_mapped_lane_valid), 
+    .o_lphy_byte_lane_map_lane_data(internal_mapped_lane_data)
   );
 
   // Pipeline Alignment Stage
@@ -80,6 +80,14 @@ module lphy_tx_top #(
     end
   end
 
-  
+  // 2. Valid Framer
+  lphy_valid_framer valid_framer_inst (
+    .i_lphy_valid_framer_clk(i_lphy_tx_top_clk), 
+    .i_lphy_valid_framer_rst_n(i_lphy_tx_top_rst_n), 
+    .i_lphy_valid_framer_lane_valid(internal_mapped_lane_valid), 
+    .i_lphy_valid_framer_credit_return(i_lphy_tx_top_credit_return), 
+    .o_lphy_valid_framer_valid_frame_out(internal_tx_valid_frame)
+  );
+
 
 endmodule
