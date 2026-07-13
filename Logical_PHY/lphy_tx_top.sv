@@ -89,5 +89,42 @@ module lphy_tx_top #(
     .o_lphy_valid_framer_valid_frame_out(internal_tx_valid_frame)
   );
 
+  // Training Pattern Generator Array & Multiplexer
+  // Each lane gets its own lphy_pattern_gen instance wired to its lane index. 
+  // This ensures each lane transmits the correct per-lane-ID training pattern
+  // as defined in UCIe spec Tables 23 & 24.
+  // select_valtrain (from LTSSM) switches between:
+  //    0 -> Per-Lane ID pattern (used during SBINIT / MBINIT calibration)
+  //    1 -> VALTRAIN pattern    (used during MBTRAIN ValTrainCenter / ValTrainVref)
+  logic [15:0] internal_training_pattern_out [NUM_LANES-1:0];
+  logic [7:0] internal_pre_scramble_data [63:0];
+
+  genvar pg;
+  generate;
+    for (pg = 0; pg < NUM_LANES; pg++) begin : gen_pattern_gens
+      lphy_pattern_gen pattern_gen_inst (
+        .i_lphy_pattern_gen_lane_id(8'(pg)),
+        .i_lphy_pattern_gen_select_valtrain(i_lphy_tx_top_select_valtrain),
+        .o_lphy_pattern_gen_pattern_out(internal_training_pattern_out[pg])
+      );
+    end
+  endgenerate
+
+  always_comb begin
+    for (int j = 0; j < NUM_LANES; j++) begin
+      if (i_lphy_tx_top_tx_training_en) begin
+        // Lower byte of the 16-bit pattern is sent first (LSB-first per UCIe spec)
+        internal_pre_scramble_data[j] = internal_training_pattern_out[j][7:0];
+      end else begin
+        internal_pre_scramble_data[j] = internal_mapped_lane_data[j];
+      end
+   end
+    // Unused lanes (indices >= NUM_LANES up to 63) default to 0
+    for (int j = NUM_LANES; j < 64; j++) begin
+      internal_pre_scramble_data[j] = 8'h00;
+    end
+  end
+
+
 
 endmodule
