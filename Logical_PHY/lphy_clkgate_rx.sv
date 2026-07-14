@@ -31,6 +31,19 @@ module lphy_clkgate_rx(
     end
   end
 
+  // Combinatorial Enable
+  assign internal_clk_en = i_lphy_clkgate_rx_valid_in | (internal_postamble_cnt < 4'd2) | i_lphy_clkgate_rx_free_run_mode;
+
+  // Glitch-Free Clock Gating Latch
+  always_latch begin
+    if (!i_lphy_clkgate_rx_rst_n) begin
+      internal_clk_en_latched <= 1'b0;
+    end else if (!i_lphy_clkgate_rx_clk) begin
+      internal_clk_en_latched <= internal_clk_en;
+    end
+  end
   
-  
+  // Drive the gated clock 
+  assign o_lphy_clkgate_rx_gated_clk = i_lphy_clkgate_rx_clk & internal_clk_en_latched;
+
 endmodule
