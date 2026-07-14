@@ -169,7 +169,7 @@ module lphy_tx_top #(
     end else begin
       o_lphy_tx_top_TXVLD <= internal_tx_valid_frame;
        for (int i = 0; i < NUM_LANES; i++) o_lphy_tx_top_TXDATA[i] <= internal_repaired_lane_data[i];
-       for (int i = 0; i < 4; i++) o_lphy_tx_top_TXRD <= internal_repaired_txrd_data[i] <= internal_repaired_txrd_data[i];
+       for (int i = 0; i < 4; i++) o_lphy_tx_top_TXRD[i] <= internal_repaired_txrd_data[i] <= internal_repaired_txrd_data[i];
 
        o_lphy_tx_top_tx_track_en <= i_lphy_tx_top_txtrk_en;
 
