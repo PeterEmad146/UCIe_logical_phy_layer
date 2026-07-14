@@ -19,6 +19,22 @@ module lphy_lane_derotate #(
   output logic [7:0] o_lphy_lane_derotate_rx_lane_data_out [NUM_LANES-1:0]
 );
 
+  // 1. Deskew Buffer Logic
+  always_ff @(posedge i_lphy_lane_derotate_clk or negedge i_lphy_lane_derotate_rst_n) begin
+    if (!i_lphy_lane_derotate_rst_n) begin
+      for (int i = 0; i < NUM_LANES; i++) begin
+        o_lphy_lane_derotate_rx_lane_data_out[i] <= '0;
+      end
+    end else if (i_lphy_lane_derotate_rx_lane_valid) begin
+      for (int i = 0; i < NUM_LANES; i++) begin
+        if (o_lphy_lane_derotate_reversal_detected)
+          o_lphy_lane_derotate_rx_lane_data_out[i] <= i_lphy_lane_derotate_rx_lane_data_in[NUM_LANES-1-i];
+        else 
+          o_lphy_lane_derotate_rx_lane_data_out[i] <= i_lphy_lane_derotate_rx_lane_data_in[i];
+      end
+    end
+  end
+
   
     
 endmodule
