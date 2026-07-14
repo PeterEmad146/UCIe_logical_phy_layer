@@ -18,5 +18,19 @@ module lphy_clkgate_rx(
   logic internal_clk_en;
   logic internal_clk_en_latched;
 
-    
+  // Postamble Counter (Tracks 8 clock cycles / 16 UI after Valid Drops)
+  always_ff @(posedge i_lphy_clkgate_rx_clk or negedge i_lphy_clkgate_rx_rst_n) begin
+    if (!i_lphy_clkgate_rx_rst_n) begin
+      internal_postamble_cnt <= 4'd2;   // Start fully idle
+    end else begin
+      if (i_lphy_clkgate_rx_valid_in) begin
+        internal_postamble_cnt <= 4'd0;
+      end else if (internal_postamble_cnt < 4'd2) begin
+        internal_postamble_cnt <= internal_postamble_cnt + 1'b1;
+      end
+    end
+  end
+
+  
+  
 endmodule
