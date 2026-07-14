@@ -154,7 +154,35 @@ module lphy_tx_top #(
     .o_lphy_repair_tx_tx_redundant_data(internal_repaired_txrd_data)
   );
 
-  
-  
+  // 6. Pipeline to AFE 
+  logic [3:0] internal_postamble_cnt;
 
+  always_ff @(posedge i_lphy_tx_top_clk or negedge i_lphy_tx_top_rst_n) begin
+    if (!i_lphy_tx_top_rst_n) begin
+      o_lphy_tx_top_TXVLD <= 8'h00;
+      for (int i = 0; i < NUM_LANES; i++) o_lphy_tx_top_TXDATA[i] <= 8'h00;
+      for (int i = 0; i < 4; i++) o_lphy_tx_top_TXRD[i] <= 8'h00;
+
+      o_lphy_tx_top_tx_clock_en <= 1'b0;
+      o_lphy_tx_top_tx_track_en <= 1'b0;
+      internal_postamble_cnt <= 4'd2; 
+    end else begin
+      o_lphy_tx_top_TXVLD <= internal_tx_valid_frame;
+       for (int i = 0; i < NUM_LANES; i++) o_lphy_tx_top_TXDATA[i] <= internal_repaired_lane_data[i];
+       for (int i = 0; i < 4; i++) o_lphy_tx_top_TXRD <= internal_repaired_txrd_data[i] <= internal_repaired_txrd_data[i];
+
+       o_lphy_tx_top_tx_track_en <= i_lphy_tx_top_txtrk_en;
+
+       // Generate AFE Logical Envelop (with exactly 2 cycle postamble)
+       if (internal_mapped_lane_valid_d1) begin
+        internal_postamble_cnt <= 4'd0;
+        o_lphy_tx_top_tx_clock_en <= 1'b1;
+       end else if (internal_postamble_cnt < 4'd2) begin
+        internal_postamble_cnt <= internal_postamble_cnt + 1'b1;
+        o_lphy_tx_top_tx_clock_en <= 1'b1;
+       end else begin
+        o_lphy_tx_top_tx_clock_en <= i_lphy_tx_top_free_run_mode;
+       end
+    end
+  end
 endmodule
