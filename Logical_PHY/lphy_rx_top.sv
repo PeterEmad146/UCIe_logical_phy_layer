@@ -126,5 +126,41 @@ module lphy_rx_top #(
     .o_lphy_repair_rx_logical_data(internal_rx_repaired_data_64)
   );
 
+  // 4. Pipeline Alignment Buffer
+  logic [7:0] internal_rx_lane_data_d1 [NUM_LANES-1:0];
+
+  always_ff @(posedge i_lphy_rx_top_clk or negedge i_lphy_rx_top_rst_n) begin
+    if (!i_lphy_rx_top_rst_n) begin
+      for (int i = 0; i < NUM_LANES; i++) internal_rx_lane_data_d1[i] <= 8'h00;
+    end else begin
+      for (int i = 0; i < NUM_LANES; i++) internal_rx_lane_data_d1[i] <= internal_rx_repaired_data_64[i];
+    end
+  end
+
+  // 5. Valid Deframer
+  lphy_valid_deframer valid_deframer_inst (
+    .i_lphy_valid_deframer_clk(i_lphy_rx_top_clk),
+    .i_lphy_valid_deframer_rst_n(i_lphy_rx_top_rst_n), 
+    .i_lphy_valid_deframer_valid_frame_in(internal_rx_valid_frame), 
+    .o_lphy_valid_deframer_lane_valid(internal_lane_valid), 
+    .o_lphy_valid_deframer_credit_return(internal_credit_return), 
+    .o_lphy_valid_deframer_framing_err(o_lphy_rx_top_framing_err)
+  );
+
+  logic pl_valid_reg;
+  logic pl_credit_return_reg;
+
+  always_ff @(posedge i_lphy_rx_top_clk or negedge i_lphy_rx_top_rst_n) begin
+    if (!i_lphy_rx_top_rst_n) begin
+      pl_valid_reg <= 1'b0;
+      pl_credit_return_reg <= 1'b0;
+    end else begin
+      pl_valid_reg <= internal_lane_valid;
+      pl_credit_return_reg <= internal_credit_return;
+    end
+  end
+
+  assign o_lphy_rx_top_pl_valid = pl_valid_reg;
+  assign o_lphy_rx_top_credit_return = pl_credit_return_reg;
 
 endmodule
