@@ -163,4 +163,36 @@ module lphy_rx_top #(
   assign o_lphy_rx_top_pl_valid = pl_valid_reg;
   assign o_lphy_rx_top_credit_return = pl_credit_return_reg;
 
+  // 6. Lane Derotator & Deskew
+  logic [7:0] internal_derotated_data [NUM_LANES-1:0];
+
+  lphy_lane_derotate #(
+    .NUM_LANES(NUM_LANES)
+  ) lane_derotate_inst (
+    .i_lphy_lane_derotate_clk(i_lphy_rx_top_clk), 
+    .i_lphy_lane_derotate_rst_n(i_lphy_rx_top_rst_n), 
+    .i_lphy_lane_derotate_rx_lane_data_in(internal_rx_lane_data_d1), 
+    .i_lphy_lane_derotate_rx_lane_valid(internal_lane_valid), 
+    .i_lphy_lane_derotate_en_reversal_check(i_lphy_rx_top_en_reversal_check),
+    .o_lphy_lane_derotate_reversal_detected(o_lphy_rx_top_reversal_detected), 
+    .o_lphy_lane_derotate_reversal_check_done(o_lphy_rx_top_reversal_check_done), 
+    .o_lphy_lane_derotate_rx_lane_data_out(internal_derotated_data)
+  );
+
+  // 7. Descrambler Array
+  genvar i;
+  generate;
+    for (i = 0; i < NUM_LANES; i++) begin: gen_descrambler
+      lphy_descrambler descrambler_inst (
+        .i_lphy_descrambler_clk(i_lphy_rx_top_clk), 
+        .i_lphy_descrambler_rst_n(i_lphy_rx_top_rst_n), 
+        .i_lphy_descrambler_enable(i_lphy_descrambler_enable & pl_valid_reg), 
+        .i_lphy_descrambler_load_seed(i_lphy_rx_top_load_seed), 
+        .i_lphy_descrambler_seed_in(i_lphy_rx_top_lane_seeds[i]), 
+        .i_lphy_descrambler_data_in(internal_derotated_data[i]), 
+        .o_lphy_descrambler_data_out(o_lphy_rx_top_pl_data[i])
+      );
+    end
+  endgenerate
+
 endmodule
