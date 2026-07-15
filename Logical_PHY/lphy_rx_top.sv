@@ -107,10 +107,6 @@ module lphy_rx_top #(
   // (no redundant lanes failed above NUM_LANES in a correctly-configured link)
   assign o_lphy_rx_top_detected_lane_failures = {{(64-NUM_LANES){1'b0}}, internal_lane_failed_narrow};
 
-  // Suppress lint warning for unused analog clock pins
-  logic _unused;
-  assign _unused = ^[i_lphy_rx_top_RXTRK];
-
   // 3. RX Repair Multiplexer
   logic [7:0] internal_rx_repaired_data_64 [63:0];
   logic [63:0] internal_rx_lane_failed_map;
