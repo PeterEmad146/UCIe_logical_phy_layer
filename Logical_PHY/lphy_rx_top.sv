@@ -195,4 +195,13 @@ module lphy_rx_top #(
     end
   endgenerate
 
+  // 8. RX Clock Gater
+  lphy_clkgate_rx clkgate_rx_inst (
+    .i_lphy_clkgate_rx_clk(i_lphy_rx_top_clk), 
+    .i_lphy_clkgate_rx_rst_n(i_lphy_rx_top_rst_n), 
+    .i_lphy_clkgate_rx_free_run_mode(i_lphy_rx_top_free_run_mode), 
+    .i_lphy_clkgate_rx_valid_in(internal_lane_valid), 
+    .o_lphy_clkgate_rx_gated_clk(o_lphy_rx_top_rx_gated_clk)
+  )
+
 endmodule
