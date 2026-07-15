@@ -16,7 +16,7 @@ module lphy_valid_deframer(
 
   always_ff @(posedge i_lphy_valid_deframer_clk or negedge i_lphy_valid_deframer_rst_n) begin
     if (!i_lphy_valid_deframer_rst_n) begin
-      i_lphy_lane_derotate_rx_lane_valid <= 1'b0;
+      o_lphy_valid_deframer_lane_valid <= 1'b0;
       o_lphy_valid_deframer_credit_return <= 1'b0;
       o_lphy_valid_deframer_framing_err <= 1'b0;
     end else begin
