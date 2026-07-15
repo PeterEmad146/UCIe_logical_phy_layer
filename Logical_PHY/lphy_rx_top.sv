@@ -111,5 +111,20 @@ module lphy_rx_top #(
   logic _unused;
   assign _unused = ^[i_lphy_rx_top_RXTRK];
 
+  // 3. RX Repair Multiplexer
+  logic [7:0] internal_rx_repaired_data_64 [63:0];
+  logic [63:0] internal_rx_lane_failed_map;
+
+  always_comb begin
+    internal_rx_lane_failed_map = i_lphy_rx_top_repair_en ? o_lphy_rx_top_detected_lane_failures : 64'h0;
+  end
+
+  lphy_repair_rx rx_repair_inst (
+    .i_lphy_repair_rx_physical_data(internal_rx_lane_data_64), 
+    .i_lphy_repair_rx_redundant_data(internal_rx_txrd_data_raw), 
+    .i_lphy_repair_rx_lane_failed(internal_rx_lane_failed_map), 
+    .o_lphy_repair_rx_logical_data(internal_rx_repaired_data_64)
+  );
+
 
 endmodule
