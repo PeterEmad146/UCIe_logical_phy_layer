@@ -87,5 +87,29 @@ module lphy_rx_top #(
     end
   end
 
+  // 2. Lane ID Detection
+  logic [NUM_LANES-1:0] internal_lane_failed_narrow;
+
+  lphy_lane_id_detect #(
+    .NUM_LANES(NUM_LANES)
+  ) lphy_id_detect_inst (
+    .i_lphy_lane_id_detect_clk(i_lphy_rx_top_clk), 
+    .i_lphy_lane_id_detect_rst_n(i_lphy_rx_top_rst_n), 
+    .i_lphy_lane_id_detect_rx_lane_data_in(internal_rx_lane_data_NUM), 
+    .i_lphy_lane_id_detect_rx_lane_valid(internal_lane_valid_d1),
+    .i_lphy_lane_id_detect_en_lane_check(i_lphy_rx_top_en_lane_check), 
+    .i_lphy_lane_id_detect_is_reversed(o_lphy_rx_top_reversal_detected), 
+    .i_lphy_repair_rx_lane_failed(internal_lane_failed_narrow), 
+    .i_lphy_lane_id_detect_en_lane_check_done(o_lphy_rx_top_check_done)
+  );
+
+  // Zero-extend to the full 64-bit output width; upper bits are hardwired to 0
+  // (no redundant lanes failed above NUM_LANES in a correctly-configured link)
+  assign o_lphy_rx_top_detected_lane_failures = {{(64-NUM_LANES){1'b0}}, internal_lane_failed_narrow};
+
+  // Suppress lint warning for unused analog clock pins
+  logic _unused;
+  assign _unused = ^[i_lphy_rx_top_RXTRK];
+
 
 endmodule
