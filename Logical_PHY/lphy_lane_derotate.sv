@@ -35,6 +35,29 @@ module lphy_lane_derotate #(
     end
   end
 
+
+  // 2. Elaboration-Time Expected Pattern Generation
+  
+  // Using generate blocks evaluates these constants before simulation runs
+  logic [7:0] internal_exp_norm_b0 [NUM_LANES-1:0];
+  logic [7:0] internal_exp_norm_b1 [NUM_LANES-1:0];
+  logic [7:0] internal_exp_rev_b0 [NUM_LANES-1:0];
+  logic [7:0] internal_exp_rev_b1 [NUM_LANES-1:0];
+
+  generate
+    for (genvar i = 0; i < NUM_LANES; i++) begin: gen_exp_patterns
+      wire [7:0] norm_id = i[7:0];
+      wire [7:0] rev_id = (NUM_LANES - 1 - i);
+
+      // Pattern: 0 1 0 1 Lane ID (LSB First) 0 1 0 1
+      assign internal_exp_norm_b0[i] = [norm_id[3:0], 4'b1010];
+      assign internal_exp_norm_b1[i] = [4'b1010, norm_id[7:4]];
+
+      assign internal_exp_rev_b0[i] = [rev_id[3:0], 4'b1010];
+      assign internal_exp_rev_b1[i] = [4'b1010, rev_id[7:4]];
+    end
+  endgenerate
+
   
     
 endmodule
