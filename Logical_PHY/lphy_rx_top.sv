@@ -41,6 +41,51 @@ module lphy_rx_top #(
   output logic o_lphy_rx_top_rx_en
 );
     
+  // Power up AFE receivers automatically when out of reset
+  assign o_lphy_rx_top_rx_en = 1'b1;
+
+  // Internal Pipeline signals
+  logic [7:0] internal_rx_lane_data_64 [63:0];
+  logic [7:0] internal_rx_lane_data_NUM [NUM_LANES-1:0];
+  logic [7:0] internal_rx_txrd_data_raw [3:0];
+  logic [7:0] internal_rx_valid_frame;
+
+  logic internal_lane_valid;
+  logic internal_lane_valid_d1;
+  logic internal_credit_return;
+
+  // Pipeline Alignment: internal_rx_lane_data_NUM is latched once (AFE latch).
+  // internal_lane_valid is latched twice (AFE latch + valid deframer FF). 
+  // Delay internal_lane_valid by 1 more cycle so lane_id_detect sees aligned data + valid. 
+  always_ff @(posedge o_lphy_rx_top_rx_gated_clk or negedge i_lphy_rx_top_rst_n) begin
+    if (!i_lphy_rx_top_rst_n) internal_lane_valid_d1 <= 1'b0;
+    else internal_lane_valid_d1 <= internal_lane_valid;
+  end
+
+  // 1. AFE Pipeline Latch
+  always_ff @(posedge o_lphy_rx_top_rx_gated_clk or negedge i_lphy_rx_top_rst_n) begin
+    if (!i_lphy_rx_top_rst_n) begin
+      internal_rx_valid_frame <= 8'h00;
+      for (int i = 0; i < 64; i++) internal_rx_lane_data_64[i] <= 8'h00;
+      for (int i = 0; i < NUM_LANES; i++) internal_rx_lane_data_NUM[i] <= 8'h00;
+      for (int i = 0; i < 4; i++) internal_rx_txrd_data_raw[i] <= 8'h00;
+    end else begin
+      internal_rx_valid_frame <= i_lphy_rx_top_RXVLD;
+
+      // Latch exactly NUM_LANES for the normal datapath
+      for (int i = 0; i < NUM_LANES; i++) begin
+        internal_rx_lane_data_NUM[i] <= i_lphy_rx_top_RXDATA[i];
+        internal_rx_lane_data_64[i] <= i_lphy_rx_top_RXDATA[i];
+      end
+
+      // Safely pad the upper lanes with 0 to prevent [VRFC 10-323] array crashes in Repair Mux
+      for (int i = NUM_LANES; i < 64; i++) begin
+        internal_rx_lane_data_64[i] <= 8'h00;
+      end
+
+      for (int i = 0; i < 4; i++) internal_rx_txrd_data_raw[i] <= i_lphy_rx_top_RXRD[i];
+    end
+  end
 
 
 endmodule
