@@ -58,6 +58,71 @@ module lphy_lane_derotate #(
     end
   endgenerate
 
-  
+  // 3. Per-Lane ID Reversal Detection (MBINIT.REVERSALMB)
+  logic [7:0] internal_prev_byte [NUM_LANES-1:0];
+  logic [7:0] internal_cycle_cnt;
+  logic [6:0] interal_normal_hits [NUM_LANES-1:0];
+  logic [6:0] internal_reversed_hits [NUM_LANES-1:0];
+
+  // Combinatorial Majority Vote Tally
+  logic [7:0] internal_total_normal;
+  logic [7:0] internal_total_reversed;
+
+  always_comb begin
+    internal_total_normal = '0;
+    internal_total_reversed = '0;
+    for (int i = 0; i < NUM_LANES; i++) begin
+      if (interal_normal_hits[i] >= 16) internal_total_normal = internal_total_normal + 1'b1;
+      if (internal_reversal_hits[i] >= 16) internal_total_reversed = internal_total_reversed + 1'b1;
+    end
+  end
     
+  always_ff @(posedge i_lphy_lane_derotate_clk or negedge i_lphy_lane_derotate_rst_n) begin
+    if (!i_lphy_lane_derotate_rst_n) begin
+      for (int i = 0; i < NUM_LANES; i++) begin
+        internal_prev_byte[i] <= '0;
+        interal_normal_hits[i] <= '0;
+        internal_reversed_hits[i] <= '0;
+      end
+      internal_cycle_cnt <= '0;
+      o_lphy_lane_derotate_reversal_detected <= 1'b0;
+      o_lphy_lane_derotate_reversal_check_done <= 1'b0;
+    end else begin
+      o_lphy_lane_derotate_reversal_check_done <= 1'b0;   // Default
+      
+      if (i_lphy_lane_derotate_en_reversal_check && i_lphy_lane_derotate_rx_lane_valid) begin
+        internal_cycle_cnt <= internal_cycle_cnt + 1'b1;
+
+        for (int i = 0; i < NUM_LANES; i++) begin
+          internal_prev_byte[i] <= i_lphy_lane_derotate_rx_lane_data_in[i];
+
+          // Check for Normal ID
+          if (internal_prev_byte[i] == internal_exp_norm_b0[i] && i_lphy_lane_derotate_rx_lane_data_in[i] == internal_exp_norm_b1[i]) begin
+            if (interal_normal_hits[i] < 127) interal_normal_hits[i] <= interal_normal_hits[i] + 1'b1;
+          end
+
+          // Check for Reversed ID
+          if (internal_prev_byte[i] == internal_exp_rev_b0[i] && i_lphy_lane_derotate_rx_lane_data_in[i] == internal_exp_rev_b1[i]) begin
+            if (internal_reversed_hits[i] < 127) internal_reversal_hits <= internal_reversed_hits[i] + 1'b1;
+          end
+        end
+
+        // Evaluate results after 128 iterations (256 clock cycles)
+        if (internal_cycle_cnt == 8'hFF) begin
+          if (internal_total_reversed > internal_total_normal) begin
+            o_lphy_lane_derotate_reversal_detected <= 1'b1;
+          end else begin
+            o_lphy_lane_derotate_reversal_detected <= 1'b0;
+          end
+          o_lphy_lane_derotate_reversal_check_done <= 1'b1;
+        end
+      end else if (!i_lphy_lane_derotate_en_reversal_check) begin
+        internal_cycle_cnt <= '0;
+        for (int i = 0; i < NUM_LANES; i++) begin
+          interal_normal_hits [i] <= '0;
+          internal_reversed_hits[i] <= '0;
+        end
+      end
+    end
+  end
 endmodule
