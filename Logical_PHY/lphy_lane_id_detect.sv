@@ -107,5 +107,4 @@ module lphy_lane_id_detect #(
       end
     end
   end
-
 endmodule
